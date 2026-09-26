@@ -14,9 +14,22 @@ class EnderecoController extends Controller
 
     public function buscar($cep)
     {
+
+$endereco = Endereco::where('cep', $cep)->first();
+
+if ($endereco) {
+    return response()->json($endereco);
+}
+
         $resposta = Http::get("https://viacep.com.br/ws/{$cep}/json/");
 
         $dados = $resposta->json();
+
+        if (isset($dados['erro']) && $dados['erro'] === 'true') {
+    return response()->json([
+        'mensagem' => 'CEP não encontrado.'
+    ], 404);
+}
 
         $endereco = Endereco::updateOrCreate(
         ['cep' => $dados['cep']],
@@ -34,7 +47,10 @@ class EnderecoController extends Controller
 
     public function index()
     {
-        //
+        $enderecos = Endereco::all();
+
+    return response()->json($enderecos);
+
     }
 
     /**

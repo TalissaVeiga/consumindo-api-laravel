@@ -1,58 +1,129 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Consumindo API externa com Laravel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Projeto desenvolvido como exercício do curso Back End – 3º Ciclo, com o objetivo de consumir uma API externa utilizando Laravel.
 
-## About Laravel
+A aplicação recebe um CEP, consulta a API pública ViaCEP, salva o endereço retornado no banco de dados e disponibiliza os dados através de uma API própria.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Tecnologias utilizadas
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- PHP 8.4
+- Laravel 13
+- PostgreSQL
+- ViaCEP
+- Laravel HTTP Client
+- Eloquent ORM
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Funcionalidades
 
-## Learning Laravel
+- Consulta de endereço através do CEP
+- Consumo da API ViaCEP
+- Armazenamento dos endereços consultados no banco de dados
+- Consulta de endereços já armazenados
+- Evita nova consulta à ViaCEP quando o CEP já está cadastrado
+- Tratamento de CEP inválido com resposta HTTP 404
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Instalação
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Clone o repositório:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+git clone https://github.com/TalissaVeiga/consumindo-api-laravel.git
 
-## Agentic Development
+Entre na pasta do projeto:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+cd consumindo-api-laravel
 
-```bash
-composer require laravel/boost --dev
+Instale as dependências:
 
-php artisan boost:install
-```
+composer install
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Crie o arquivo .env a partir do .env.example.
 
-## Contributing
+Gere a chave da aplicação:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+php artisan key:generate
 
-## Code of Conduct
+## Configuração do banco de dados
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Este projeto utiliza PostgreSQL.
 
-## Security Vulnerabilities
+No arquivo .env, configure os dados do banco:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=consumindo_api
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
 
-## License
+Depois, execute as migrations:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+php artisan migrate
+
+## Executando o projeto
+
+Inicie o servidor Laravel:
+
+php artisan serve
+
+A API ficará disponível em:
+
+http://localhost:8000
+
+## Rotas da API
+
+### Consultar um CEP
+
+GET /api/enderecos/{cep}
+
+Exemplo:
+
+http://localhost:8000/api/enderecos/01001000
+
+A aplicação verifica primeiro se o CEP já está cadastrado no banco. Caso não esteja, consulta a API ViaCEP, salva o endereço e retorna os dados.
+
+### Listar endereços consultados
+
+GET /api/enderecos
+
+Exemplo:
+
+http://localhost:8000/api/enderecos
+
+Essa rota retorna todos os endereços que já foram consultados e armazenados no banco de dados.
+
+## Testes
+
+Exemplo de consulta de um CEP válido:
+
+curl.exe http://localhost:8000/api/enderecos/01001000
+
+Exemplo de consulta de outro CEP válido:
+
+curl.exe http://localhost:8000/api/enderecos/90010000
+
+Exemplo para listar os endereços armazenados:
+
+curl.exe http://localhost:8000/api/enderecos
+
+Exemplo de CEP inválido:
+
+curl.exe http://localhost:8000/api/enderecos/99999999
+
+Para um CEP inválido, a API retorna o status HTTP 404 e a mensagem:
+
+{
+    "mensagem": "CEP não encontrado."
+}
+
+## Estrutura do projeto
+
+Os principais arquivos utilizados neste exercício são:
+
+- app/Models/Endereco.php — modelo do endereço
+- app/Http/Controllers/EnderecoController.php — lógica da API
+- database/migrations/ — migrations do banco de dados
+- routes/api.php — rotas da API
+
+## Autor
+
+Talissa Veiga
